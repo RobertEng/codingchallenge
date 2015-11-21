@@ -1,0 +1,39 @@
+Robert Eng
+Taboola Coding Challenge
+Question 3
+
+The main difference between a "regular" cache and this one is you go out and
+call an outside function rather than going down the memory hiearchy.
+
+The goal is to minimize outside function calls at all costs because presumably
+these are extremely expensive. There are corner cases where outside functions
+are faster (ie sometimes its faster to pull something off of a machine you're
+connected to over ethernet than it is to pull from disk because disk is so slow)
+but generally this won't happen.
+
+Thus when something needs to be evicted, follow a modified Least Recently Used
+policy. Preferentially evict first the data which is contained within the memory
+hiearchy which hasn't been accessed recently, second the data which was
+from an outside function which hasn't been accessed recently, third the data
+within the memory hiearchy which has been accessed recently, and fourth the data
+from the outside functions. Again, this is only advantageous if the performance
+penalty from an increased number of cache misses of regular memory outweighs the
+performance penalties from cache misses on functions.
+
+To do this, it wouldn't be a function per se but rather a change to the caching
+algorithm. A certain n number of cache blocks where is some reasonable fraction
+of the total number of cache blocks available in our generic cache can be
+reserved for outside function data. Thus even when data from the memory
+hierarchy is accessed, it won't evict data from functions. 
+
+From a security standpoint, you want to scrub whatever the outside function
+call returns so when you are writing to the cache, nothing malicious can affect
+your OS. While this does reduce performance of your cache (and caches are
+supposed to be fast), its better than having someone manipulate your memory
+blocks as they did with C buffers in the olden days.
+
+To fix up the security issue, all data from outside functions would have to be
+run through some sort of scrubber. It would ideally look for anything which
+could alter the meta data in the cache. Finally when writing to the cache, the
+data needs to be broken up into cache blocks.
+
